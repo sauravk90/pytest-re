@@ -1,0 +1,10 @@
+site_name: pytest-re
+site_description: A pytest plugin to re-run tests from JUnit XML reports
+site_author: Saurav Kumar
+
+theme: readthedocs
+
+repo_url: https://github.com/sauravk90/pytest-re
+
+pages:
+- Home: index.md
