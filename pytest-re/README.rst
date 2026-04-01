@@ -14,63 +14,97 @@ pytest-re
     :target: https://github.com/sauravk90/pytest-re/actions/workflows/main.yml
     :alt: See Build Status on GitHub Actions
 
-A pytest plugin to re-run tests from JUnit XML reports
+Re-run pytest tests from JUnit XML reports.
 
-----
+Why this exists
+---------------
 
-This `pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`_'s `cookiecutter-pytest-plugin`_ template.
-
+CI systems often keep JUnit XML artifacts, but pytest's built-in ``--last-failed``
+only works when the local ``.pytest_cache`` from the original run is still
+available. ``pytest-re`` closes that gap by selecting tests directly from a
+JUnit XML report.
 
 Features
 --------
 
-* TODO
-
-
-Requirements
-------------
-
-* TODO
-
+* Re-run only the tests referenced by one or more JUnit XML reports.
+* Filter which XML statuses should be selected with ``--from-xml-status``.
+* Strip a known classname prefix with ``--from-xml-prefix`` when reports were
+  generated with ``--junit-prefix``.
+* Works with standard pytest JUnit XML and xdist-generated JUnit XML reports.
 
 Installation
 ------------
 
-You can install "pytest-re" via `pip`_ from `PyPI`_::
+Install from PyPI::
 
-    $ pip install pytest-re
-
+    pip install pytest-re
 
 Usage
 -----
 
-* TODO
+Generate a JUnit XML report from a normal pytest run::
+
+    pytest --junitxml=report.xml
+
+Re-run only failed and errored tests from that report::
+
+    pytest --from-xml report.xml
+
+Select a different set of XML statuses::
+
+    pytest --from-xml report.xml --from-xml-status=passed
+
+Use multiple reports at once::
+
+    pytest --from-xml shard-a.xml shard-b.xml
+
+If the report was generated with a classname prefix, strip it during mapping::
+
+    pytest --junitxml=report.xml --junit-prefix=ci
+    pytest --from-xml report.xml --from-xml-prefix=ci
+
+How matching works
+------------------
+
+``pytest-re`` reads each ``<testcase>`` entry from the JUnit XML report, maps it
+back to a pytest node ID, and deselects everything else during collection.
+
+When multiple reports contain the same test case, ``pytest-re`` keeps the worst
+observed status using this order:
+
+* ``error``
+* ``failed``
+* ``skipped``
+* ``passed``
+
+Notes
+-----
+
+* The plugin targets pytest-generated JUnit XML and nearby variants.
+* If a testcase from the XML cannot be mapped to a collected pytest item, the
+  run continues and reports how many XML cases were unmatched.
+* Parametrized tests are supported as long as their parameterized names are
+  present in the XML report.
 
 Contributing
 ------------
-Contributions are very welcome. Tests can be run with `tox`_, please ensure
-the coverage at least stays the same before you submit a pull request.
+
+Run the test suite with::
+
+    tox
 
 License
 -------
 
-Distributed under the terms of the `MIT`_ license, "pytest-re" is free and open source software
-
+Distributed under the terms of the `MIT`_ license, ``pytest-re`` is free and
+open source software.
 
 Issues
 ------
 
-If you encounter any problems, please `file an issue`_ along with a detailed description.
+If you encounter any problems, please `file an issue`_ with a detailed
+description and, if possible, the JUnit XML snippet that triggered the issue.
 
-.. _`Cookiecutter`: https://github.com/audreyr/cookiecutter
-.. _`@hackebrot`: https://github.com/hackebrot
 .. _`MIT`: https://opensource.org/licenses/MIT
-.. _`BSD-3`: https://opensource.org/licenses/BSD-3-Clause
-.. _`GNU GPL v3.0`: https://www.gnu.org/licenses/gpl-3.0.txt
-.. _`Apache Software License 2.0`: https://www.apache.org/licenses/LICENSE-2.0
-.. _`cookiecutter-pytest-plugin`: https://github.com/pytest-dev/cookiecutter-pytest-plugin
 .. _`file an issue`: https://github.com/sauravk90/pytest-re/issues
-.. _`pytest`: https://github.com/pytest-dev/pytest
-.. _`tox`: https://tox.readthedocs.io/en/latest/
-.. _`pip`: https://pypi.org/project/pip/
-.. _`PyPI`: https://pypi.org/project
